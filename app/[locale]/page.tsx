@@ -35,7 +35,8 @@ export default function HomePage() {
                     size: 20
                 });
                 return response.data;
-            } else {
+            }
+        else {
                 // Используем базовый запрос всех объявлений
                 const response = await adApi.getAllAds(currentPage, 20, filters.sortBy === 'price_low' ? 'asc' : 'desc');
                 return response.data;
