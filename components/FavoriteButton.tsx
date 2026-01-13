@@ -1,6 +1,5 @@
-"use client";
+﻿"use client";
 
-import { motion } from "framer-motion";
 import { useFavorites } from "@/hooks/useFavorites";
 import { Ad } from "@/types";
 
@@ -13,30 +12,29 @@ export default function FavoriteButton({ ad, size = "md" }: FavoriteButtonProps)
     const { isFavorite, toggleFavorite } = useFavorites();
 
     const sizeClasses = {
-        sm: "w-8 h-8",
-        md: "w-10 h-10",
-        lg: "w-12 h-12"
+        sm: "h-8 px-2 text-xs",
+        md: "h-9 px-2 text-xs",
+        lg: "h-10 px-3 text-sm",
     };
 
+    const active = isFavorite(ad.id);
+
     return (
-        <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
+        <button
+            type="button"
             onClick={() => toggleFavorite(ad)}
-            className={`${sizeClasses[size]} rounded-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 flex items-center justify-center shadow-sm hover:shadow-md transition-all ${
-                isFavorite(ad.id)
-                    ? "text-red-500 border-red-300 dark:border-red-700"
-                    : "text-gray-400 hover:text-red-500"
+            className={`${sizeClasses[size]} rounded-md border bg-white ${
+                active
+                    ? "border-red-200 text-red-600"
+                    : "border-gray-200 text-gray-600"
             }`}
-            aria-label={isFavorite(ad.id) ? "Удалить из избранного" : "Добавить в избранное"}
+            aria-label={
+                active
+                    ? "Удалить из избранного"
+                    : "Добавить в избранное"
+            }
         >
-            <motion.span
-                initial={false}
-                animate={{ scale: isFavorite(ad.id) ? 1.2 : 1 }}
-                transition={{ type: "spring", stiffness: 300 }}
-            >
-                {isFavorite(ad.id) ? "❤️" : "🤍"}
-            </motion.span>
-        </motion.button>
+            {active ? "В избранном" : "В избранное"}
+        </button>
     );
 }

@@ -1,44 +1,40 @@
-import axios from 'axios';
-import { Ad, PageResponse, FilterOptions } from '@/types';
+import axios from "axios";
+import { Ad, PageResponse } from "@/types";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-
-
-type Filters = {
-    query?: string;
-    categories?: string[];
-    priceRange?: { min: number; max: number };
-    sortBy?: string;
-    page?: number;
-    size?: number;
-}
+const API_BASE_URL =
+    process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+const NORMALIZED_BASE_URL = API_BASE_URL.replace(/\/+$/, "");
 
 export const api = axios.create({
-    baseURL: API_BASE_URL,
+    baseURL: `${NORMALIZED_BASE_URL}/api`,
     headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
     },
+    withCredentials: true,
 });
 
-// Добавляем interceptor для авторизации
+// 🔐 JWT interceptor
 api.interceptors.request.use((config) => {
-    const token = localStorage.getItem('authToken');
+    const token =
+        localStorage.getItem("accessToken") ||
+        localStorage.getItem("authToken");
+
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }
+
     return config;
 });
 
-// API функции для объявлений
+// 📦 Ads API
 export const adApi = {
-    // Получить все объявления с пагинацией
-    getAllAds: (page: number = 0, size: number = 20, sort: string = 'desc') => {
-        return api.get<PageResponse<Ad>>('/api/ads', {
-            params: { page, size, sort }
-        });
-    },
+    // Все объявления
+    getAllAds: (page = 0, size = 20, sort = "desc") =>
+        api.get<PageResponse<Ad>>("/ads", {
+            params: { page, size, sort },
+        }),
 
-    // Расширенный поиск с фильтрами
+    // Поиск
     searchAds: (filters: {
         query?: string;
         categories?: string[];
@@ -47,14 +43,19 @@ export const adApi = {
         page?: number;
         size?: number;
     }) => {
-        const params: Record<string, unknown> = {
-            page: filters.page || 0,
-            size: filters.size || 20,
-            sort: filters.sortBy === 'price_low' ? 'asc' : 'desc'
+        const params: Record<string, any> = {
+            page: filters.page ?? 0,
+            size: filters.size ?? 20,
+            sort:
+                filters.sortBy === "price_low"
+                    ? "asc"
+                    : filters.sortBy === "price_high"
+                        ? "desc"
+                        : "desc",
         };
 
         if (filters.query) params.query = filters.query;
-        if (filters.categories && !filters.categories.includes('ALL')) {
+        if (filters.categories && !filters.categories.includes("ALL")) {
             params.categories = filters.categories;
         }
         if (filters.priceRange) {
@@ -62,30 +63,28 @@ export const adApi = {
             params.maxPrice = filters.priceRange.max;
         }
 
-        return api.get<PageResponse<Ad>>('/api/ads/search', { params });
+        return api.get<PageResponse<Ad>>("/ads/search", { params });
     },
 
-    // Получить объявление по ID
-    getAdById: (id: number) => {
-        return api.get<Ad>(`/api/ads/${id}`);
-    },
+    // Моё объявление
+    getMyAds: (page = 0, size = 10) =>
+        api.get<PageResponse<Ad>>("/ads/my", {
+            params: { page, size },
+        }),
 
-    // Создать объявление
-    createAd: (adData: Record<string, unknown>) => {
-        return api.post('/api/ads', adData);
-    },
+    // Получить по ID
+    getAdById: (id: number) => api.get<Ad>(`/ads/${id}`),
 
-    // Получить мои объявления
-    getMyAds: (page: number = 0, size: number = 10) => {
-        return api.get<PageResponse<Ad>>('/api/ads/my', {
-            params: { page, size }
-        });
-    },
-
-    // Удалить объявление
-    deleteAd: (id: number) => {
-        return api.delete(`/api/ads/${id}`);
-    }
-
-
+    // Create ad
+    createAd: (payload: {
+        title: string;
+        description: string;
+        price: number;
+        category: string;
+        region: string;
+    }) => api.post<Ad>("/ads", payload),
+    // ✅ УДАЛЕНИЕ (ВОТ ЧЕГО НЕ ХВАТАЛО)
+    deleteAd: (id: number) => api.delete(`/ads/${id}`),
 };
+
+

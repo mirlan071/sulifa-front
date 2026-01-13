@@ -1,93 +1,86 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useAuthStore } from "@/lib/stores";
-import { motion } from "framer-motion";
-import ThemeSwitcher from "./ThemeSwitcher";
+import { useEffect, useState } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 
 export default function Navbar() {
     const { token, userId, logout } = useAuthStore();
+    const favoritesHref = token ? "/profile" : "/ads/auth/login";
+    const params = useParams<{ locale?: string }>();
+    const locale = params?.locale || "en";
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const [query, setQuery] = useState(searchParams.get("q") ?? "");
+
+    useEffect(() => {
+        setQuery(searchParams.get("q") ?? "");
+    }, [searchParams]);
+
+    const handleSearch = (event: React.FormEvent) => {
+        event.preventDefault();
+        const trimmed = query.trim();
+        const basePath = `/${locale}`;
+
+        if (!trimmed) {
+            router.push(basePath);
+            return;
+        }
+
+        const nextParams = new URLSearchParams({ q: trimmed });
+        router.push(`${basePath}?${nextParams.toString()}`);
+    };
 
     return (
-        <motion.nav
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur border-b border-gray-200 dark:border-gray-700"
-        >
-            <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-                {/* Логотип */}
-                <Link href="/" className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                        <span className="text-white font-bold text-sm">S</span>
-                    </div>
-                    <span className="text-2xl font-bold tracking-tight">
-                        <span className="text-blue-600 dark:text-blue-400">sulifa</span>
-                        <span className="text-gray-900 dark:text-white">.com</span>
-                    </span>
-                </Link>
-
+        <nav className="sticky top-0 z-50 bg-white border-b border-gray-200">
+            <div className="container mx-auto px-4 py-2">
                 <div className="flex items-center gap-4">
-                    {/* Навигация */}
-                    <div className="flex items-center gap-6 mr-4">
-                        <Link
-                            href="/"
-                            className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors font-medium"
-                        >
-                            Главная
-                        </Link>
+                    <Link href={`/${locale}`} className="text-lg font-semibold text-gray-900">
+                        <span className="text-blue-600">sulifa</span>.com
+                    </Link>
 
-                        {token && (
-                            <Link
-                                href="/profile"
-                                className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors font-medium"
-                            >
-                                Мои объявления
+                    <div className="flex-1">
+                        <form className="flex items-center gap-2" onSubmit={handleSearch}>
+                            <input
+                                type="text"
+                                placeholder="Поиск товаров и объявлений"
+                                className="ui-input h-10 text-sm"
+                                value={query}
+                                onChange={(event) => setQuery(event.target.value)}
+                            />
+                            <button type="submit" className="ui-button-primary h-10 px-6">
+                                Найти
+                            </button>
+                        </form>
+                    </div>
+
+                    <div className="flex items-center gap-4 text-sm text-gray-700">
+                        {!token && (
+                            <Link href="/ads/auth/login" className="hover:text-blue-600">
+                                👤 Войти
                             </Link>
                         )}
-
-                        <Link
-                            href="/create"
-                            className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors font-medium"
-                        >
-                            Создать
+                        {token && (
+                            <Link href="/profile" className="hover:text-blue-600">
+                                👤 Профиль
+                            </Link>
+                        )}
+                        <Link href={favoritesHref} className="hover:text-blue-600">
+                            ♡ Избранное
                         </Link>
-                    </div>
-
-                    {/* Переключатель темы */}
-                    <ThemeSwitcher />
-
-                    {/* Аутентификация */}
-                    {token ? (
-                        <div className="flex items-center gap-3">
-                            <span className="text-sm text-gray-600 dark:text-gray-400">
-                                ID: {userId}
-                            </span>
+                        {token && (
                             <button
+                                type="button"
                                 onClick={logout}
-                                className="px-4 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-gray-700 dark:text-gray-300 font-medium"
+                                className="border border-gray-200 rounded-md px-3 py-1.5 bg-white text-sm"
                             >
-                                Выйти
+                                Выйти ({userId})
                             </button>
-                        </div>
-                    ) : (
-                        <div className="flex items-center gap-3">
-                            <Link
-                                href="/ads/auth/login"
-                                className="px-4 py-1.5 rounded-lg text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors font-medium"
-                            >
-                                Войти
-                            </Link>
-                            <Link
-                                href="/ads/auth/register"
-                                className="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors font-medium"
-                            >
-                                Регистрация
-                            </Link>
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
             </div>
-        </motion.nav>
+        </nav>
     );
 }

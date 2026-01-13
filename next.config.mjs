@@ -1,7 +1,8 @@
 // next.config.mjs
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-    // ваши опции конфигурации
-};
+import createNextIntlPlugin from 'next-intl/plugin';
 
-export default nextConfig;
+const withNextIntl = createNextIntlPlugin();
+
+export default withNextIntl({
+    reactStrictMode: true,
+});

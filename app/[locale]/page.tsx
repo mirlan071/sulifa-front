@@ -1,76 +1,100 @@
-"use client";
+﻿"use client";
 
 import { useQuery } from "@tanstack/react-query";
 import { adApi } from "@/lib/api";
 import AdCard from "@/components/AdCard";
-import { motion } from "framer-motion";
-import { useState } from "react";
-import { Ad, PageResponse, FilterOptions } from '@/types';
+import { useEffect, useState } from "react";
+import { Ad, FilterOptions } from "@/types";
 import Link from "next/link";
-import SearchWithSuggestions from "@/components/SearchWithSuggestions";
 import AdFilters from "@/components/AdFilters";
 import Pagination from "@/components/Pagination";
+import { useSearchParams } from "next/navigation";
+
+const CATEGORY_TABS = [
+    { value: "ALL", label: "Все" },
+    { value: "ELECTRONICS", label: "Электроника" },
+    { value: "CARS", label: "Авто" },
+    { value: "REAL_ESTATE", label: "Недвижимость" },
+    { value: "JOBS", label: "Работа" },
+    { value: "SERVICES", label: "Услуги" },
+    { value: "OTHER", label: "Другое" },
+];
 
 export default function HomePage() {
-    const [searchQuery, setSearchQuery] = useState("");
+    const searchParams = useSearchParams();
+    const searchQuery = (searchParams.get("q") || "").trim();
     const [filters, setFilters] = useState<FilterOptions>({
         categories: ["ALL"],
         priceRange: { min: 0, max: 10000 },
-        sortBy: "newest"
+        sortBy: "newest",
     });
     const [currentPage, setCurrentPage] = useState(0);
     const [filtersOpen, setFiltersOpen] = useState(false);
 
+    useEffect(() => {
+        setCurrentPage(0);
+    }, [searchQuery]);
+
     const { data: pageData, isLoading, error } = useQuery({
         queryKey: ["ads", searchQuery, filters, currentPage],
         queryFn: async () => {
-            if (searchQuery || (filters.categories.length > 0 && !filters.categories.includes('ALL')) || filters.priceRange.min > 0 || filters.priceRange.max < 10000) {
-                // Используем расширенный поиск с фильтрами
+            if (
+                searchQuery ||
+                (filters.categories.length > 0 &&
+                    !filters.categories.includes("ALL")) ||
+                filters.priceRange.min > 0 ||
+                filters.priceRange.max < 10000
+            ) {
                 const response = await adApi.searchAds({
                     query: searchQuery,
                     categories: filters.categories,
                     priceRange: filters.priceRange,
                     sortBy: filters.sortBy,
                     page: currentPage,
-                    size: 20
+                    size: 24,
                 });
                 return response.data;
             }
-        else {
-                // Используем базовый запрос всех объявлений
-                const response = await adApi.getAllAds(currentPage, 20, filters.sortBy === 'price_low' ? 'asc' : 'desc');
-                return response.data;
-            }
+
+            const response = await adApi.getAllAds(
+                currentPage,
+                24,
+                filters.sortBy === "price_low" ? "asc" : "desc"
+            );
+            return response.data;
         },
     });
 
     const ads = pageData?.content || [];
     const totalPages = pageData?.totalPages || 0;
 
-    const handleSearch = (query: string) => {
-        setSearchQuery(query);
-        setCurrentPage(0); // Сбрасываем на первую страницу при новом поиске
-    };
-
     const handleFilterChange = (newFilters: FilterOptions) => {
         setFilters(newFilters);
-        setCurrentPage(0); // Сбрасываем на первую страницу при изменении фильтров
+        setCurrentPage(0);
+    };
+
+    const handleCategorySelect = (category: string) => {
+        const nextCategories = category === "ALL" ? ["ALL"] : [category];
+
+        handleFilterChange({
+            ...filters,
+            categories: nextCategories,
+        });
     };
 
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        window.scrollTo({ top: 0, behavior: "smooth" });
     };
 
     if (error) {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
-                    <div className="text-6xl mb-4">😞</div>
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                    <h2 className="text-lg font-semibold text-gray-900 mb-2">
                         Ошибка загрузки
                     </h2>
-                    <p className="text-gray-600 dark:text-gray-400">
+                    <p className="text-sm text-gray-600">
                         Не удалось загрузить объявления. Попробуйте обновить страницу.
                     </p>
                 </div>
@@ -79,137 +103,84 @@ export default function HomePage() {
     }
 
     return (
-        <div className="min-h-screen py-8">
+        <div className="min-h-screen py-4">
             <div className="container mx-auto px-4 max-w-7xl">
-                {/* Hero секция */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6 }}
-                    className="text-center mb-12"
-                >
-                    <h1 className="text-5xl md:text-6xl font-bold text-gray-900 dark:text-white mb-4">
-                        Найдите лучшее на <span className="text-blue-600 dark:text-blue-400">sulifa.com</span>
-                    </h1>
-                    <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto mb-8">
-                        Лучшая площадка для покупки и продажи товаров
-                    </p>
-
-                    <Link
-                        href="/create"
-                        className="inline-flex items-center px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-                    >
-                        <span className="mr-2">+</span>
-                        Создать объявление
+                <div className="flex items-center justify-between mb-3">
+                    <h1 className="text-xl font-semibold text-gray-900">Каталог</h1>
+                    <Link href="/create" className="ui-button-primary">
+                        Подать объявление
                     </Link>
-                </motion.div>
+                </div>
 
-                {/* Поиск с автодополнением */}
-                <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: 0.2 }}
-                    className="flex gap-3 justify-center mb-6"
-                >
-                    <SearchWithSuggestions
-                        onSearch={handleSearch}
-                        placeholder="Найти объявления..."
-                    />
-                </motion.div>
+                <div className="flex flex-wrap gap-2 mb-4">
+                    {CATEGORY_TABS.map((category) => {
+                        const isActive =
+                            category.value === "ALL"
+                                ? filters.categories.includes("ALL")
+                                : filters.categories.includes(category.value);
 
-                {/* Фильтры */}
+                        return (
+                            <button
+                                key={category.value}
+                                type="button"
+                                onClick={() => handleCategorySelect(category.value)}
+                                className={`px-3 py-1.5 rounded-md border text-sm ${
+                                    isActive
+                                        ? "border-blue-600 text-blue-600 font-semibold"
+                                        : "border-gray-200 text-gray-700"
+                                }`}
+                            >
+                                {category.label}
+                            </button>
+                        );
+                    })}
+                </div>
+
                 <AdFilters
+                    filters={filters}
                     onFilterChange={handleFilterChange}
                     isOpen={filtersOpen}
                     onToggle={() => setFiltersOpen(!filtersOpen)}
                 />
 
-                {/* Информация о результатах */}
                 {!isLoading && pageData && (
-                    <div className="mb-6 text-center">
-                        <p className="text-gray-600 dark:text-gray-400">
-                            Найдено <span className="font-semibold text-blue-600 dark:text-blue-400">
-                                {pageData.totalElements}
-                            </span> объявлений
-                            {searchQuery && (
-                                <span> по запросу &quot;{searchQuery}&quot;</span>
-                            )}
-                        </p>
+                    <div className="mb-3 text-sm text-gray-600">
+                        Найдено <span className="font-semibold">{pageData.totalElements}</span> объявлений
                     </div>
                 )}
 
-                {/* Загрузка */}
                 {isLoading && (
-                    <div className="flex justify-center items-center py-20">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400"></div>
+                    <div className="flex justify-center items-center py-10 text-sm text-gray-600">
+                        Загрузка...
                     </div>
                 )}
 
-                {/* Сетка объявлений */}
                 {!isLoading && (
-                    <motion.div
-                        initial="hidden"
-                        animate="visible"
-                        variants={{
-                            hidden: { opacity: 0 },
-                            visible: {
-                                opacity: 1,
-                                transition: {
-                                    staggerChildren: 0.1
-                                }
-                            },
-                        }}
-                        className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-8"
-                    >
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3">
                         {ads.map((ad: Ad) => (
-                            <motion.div
-                                key={ad.id}
-                                variants={{
-                                    hidden: { opacity: 0, y: 20 },
-                                    visible: { opacity: 1, y: 0 },
-                                }}
-                                whileHover={{ y: -5 }}
-                                transition={{ duration: 0.3 }}
-                            >
-                                <AdCard ad={ad} />
-                            </motion.div>
+                            <AdCard key={ad.id} ad={ad} />
                         ))}
-                    </motion.div>
+                    </div>
                 )}
 
-                {/* Пустое состояние */}
                 {!isLoading && ads.length === 0 && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="text-center py-20"
-                    >
-                        <div className="text-6xl mb-4">😔</div>
-                        <h3 className="text-2xl font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                            Объявления не найдены
-                        </h3>
-                        <p className="text-gray-500 dark:text-gray-400 mb-6">
-                            {searchQuery
-                                ? `По запросу &quot;${searchQuery}&quot; ничего не найдено`
-                                : "Попробуйте изменить параметры поиска"
-                            }
+                    <div className="text-center py-10 text-gray-600">
+                        <p className="text-base font-medium">Объявления не найдены</p>
+                        <p className="text-sm mt-1">
+                            Попробуйте изменить параметры фильтра.
                         </p>
-                        <Link
-                            href="/create"
-                            className="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors"
-                        >
-                            Создать первое объявление
+                        <Link href="/create" className="ui-button-primary mt-3 inline-flex">
+                            Подать объявление
                         </Link>
-                    </motion.div>
+                    </div>
                 )}
 
-                {/* Пагинация */}
                 {!isLoading && totalPages > 1 && (
                     <Pagination
                         currentPage={currentPage}
                         totalPages={totalPages}
                         onPageChange={handlePageChange}
-                        className="mt-8"
+                        className="mt-4"
                     />
                 )}
             </div>

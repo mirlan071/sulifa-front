@@ -1,41 +1,29 @@
-@import "tailwindcss";
+﻿@import "tailwindcss";
 
 :root {
-    --background: #ffffff;
-    --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-    :root {
-        --background: #0a0a0a;
-        --foreground: #ededed;
-        --primary: #60a5fa;
-        --secondary: #9ca3af;
-        --accent: #a78bfa;
-        --muted: #1f2937;
-        --border: #374151;
-    }
+    --background: #f5f5f5;
+    --foreground: #111827;
+    --border: #e5e7eb;
+    --primary: #2563eb;
 }
 
 body {
     background: var(--background);
     color: var(--foreground);
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    line-height: 1.6;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.5;
 }
 
-/* Кастомные анимации */
-@keyframes fadeSlide {
-    from {
-        opacity: 0;
-        transform: translateY(30px);
+@layer components {
+    .ui-input {
+        @apply w-full h-11 px-3 border border-gray-300 rounded-md bg-white text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-600;
     }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
 
-.fade-slide {
-    animation: fadeSlide 0.4s ease forwards;
+    .ui-button-primary {
+        @apply inline-flex items-center justify-center h-11 px-4 rounded-md bg-blue-600 text-white text-sm font-semibold;
+    }
+
+    .ui-card {
+        @apply bg-white border border-gray-200 rounded-md;
+    }
 }

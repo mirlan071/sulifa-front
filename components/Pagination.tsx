@@ -1,6 +1,4 @@
-"use client";
-
-import { motion } from "framer-motion";
+﻿"use client";
 
 interface PaginationProps {
     currentPage: number;
@@ -10,14 +8,13 @@ interface PaginationProps {
 }
 
 export default function Pagination({
-                                       currentPage,
-                                       totalPages,
-                                       onPageChange,
-                                       className = ""
-                                   }: PaginationProps) {
+    currentPage,
+    totalPages,
+    onPageChange,
+    className = "",
+}: PaginationProps) {
     const pages = [];
     const maxVisiblePages = 5;
-
     let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
     let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
 
@@ -31,76 +28,71 @@ export default function Pagination({
 
     if (totalPages <= 1) return null;
 
+    const baseButton =
+        "px-3 py-2 rounded-md border border-gray-200 bg-white text-sm text-gray-700";
+
     return (
-        <div className={`flex justify-center items-center space-x-2 ${className}`}>
-            {/* Кнопка назад */}
-            <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+        <div className={`flex justify-center items-center gap-2 ${className}`}>
+            <button
+                type="button"
                 onClick={() => onPageChange(currentPage - 1)}
                 disabled={currentPage === 0}
-                className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                className={`${baseButton} disabled:opacity-50 disabled:cursor-not-allowed`}
             >
                 ←
-            </motion.button>
+            </button>
 
-            {/* Первая страница */}
             {startPage > 0 && (
                 <>
-                    <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
+                    <button
+                        type="button"
                         onClick={() => onPageChange(0)}
-                        className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                        className={baseButton}
                     >
                         1
-                    </motion.button>
+                    </button>
                     {startPage > 1 && <span className="px-2 text-gray-500">...</span>}
                 </>
             )}
 
-            {/* Страницы */}
-            {pages.map(page => (
-                <motion.button
+            {pages.map((page) => (
+                <button
                     key={page}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    type="button"
                     onClick={() => onPageChange(page)}
-                    className={`px-3 py-2 rounded-lg border transition-colors ${
+                    className={
                         currentPage === page
-                            ? "bg-blue-600 border-blue-600 text-white"
-                            : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-                    }`}
+                            ? "px-3 py-2 rounded-md border border-blue-600 bg-blue-600 text-sm text-white"
+                            : baseButton
+                    }
                 >
                     {page + 1}
-                </motion.button>
+                </button>
             ))}
 
-            {/* Последняя страница */}
             {endPage < totalPages - 1 && (
                 <>
-                    {endPage < totalPages - 2 && <span className="px-2 text-gray-500">...</span>}
-                    <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
+                    {endPage < totalPages - 2 && (
+                        <span className="px-2 text-gray-500">...</span>
+                    )}
+                    <button
+                        type="button"
                         onClick={() => onPageChange(totalPages - 1)}
-                        className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                        className={baseButton}
                     >
                         {totalPages}
-                    </motion.button>
+                    </button>
                 </>
             )}
 
-            {/* Кнопка вперед */}
-            <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+            <button
+                type="button"
                 onClick={() => onPageChange(currentPage + 1)}
                 disabled={currentPage === totalPages - 1}
-                className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                className={`${baseButton} disabled:opacity-50 disabled:cursor-not-allowed`}
             >
                 →
-            </motion.button>
+            </button>
         </div>
     );
 }

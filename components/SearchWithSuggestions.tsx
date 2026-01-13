@@ -1,7 +1,6 @@
-"use client";
+﻿"use client";
 
 import { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 
 interface SearchSuggestion {
     id: number;
@@ -15,26 +14,25 @@ interface SearchWithSuggestionsProps {
 }
 
 export default function SearchWithSuggestions({
-                                                  onSearch,
-                                                  placeholder = "Найти объявления..."
-                                              }: SearchWithSuggestionsProps) {
+    onSearch,
+    placeholder = "Найти объявления...",
+}: SearchWithSuggestionsProps) {
     const [query, setQuery] = useState("");
     const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
 
-    // Mock данные для автодополнения
     const mockSuggestions: SearchSuggestion[] = [
         { id: 1, title: "iPhone 13", category: "ELECTRONICS" },
-        { id: 2, title: "MacBook Pro", category: "ELECTRONICS" },
-        { id: 3, title: "Диван", category: "HOME" },
-        { id: 4, title: "Кроссовки Nike", category: "CLOTHING" },
-        { id: 5, title: "Велосипед", category: "SPORTS" },
+        { id: 2, title: "Toyota Camry", category: "CARS" },
+        { id: 3, title: "2-комнатная квартира", category: "REAL_ESTATE" },
+        { id: 4, title: "Водитель", category: "JOBS" },
+        { id: 5, title: "Ремонт техники", category: "SERVICES" },
     ];
 
     useEffect(() => {
         if (query.length > 1) {
-            const filtered = mockSuggestions.filter(item =>
+            const filtered = mockSuggestions.filter((item) =>
                 item.title.toLowerCase().includes(query.toLowerCase())
             );
             setSuggestions(filtered);
@@ -62,54 +60,48 @@ export default function SearchWithSuggestions({
     };
 
     return (
-        <div className="relative w-full max-w-2xl">
-            <div className="relative">
+        <div className="w-full max-w-2xl">
+            <div className="flex gap-2">
                 <input
                     ref={inputRef}
                     type="text"
                     placeholder={placeholder}
-                    className="w-full px-6 py-4 rounded-2xl border border-gray-300 dark:border-gray-600 shadow-lg focus:ring-4 focus:ring-blue-200 dark:focus:ring-blue-800 focus:border-blue-500 outline-none transition-all text-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                    className="ui-input h-10 text-sm"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     onKeyPress={handleKeyPress}
                     onFocus={() => query.length > 1 && setShowSuggestions(true)}
                 />
                 <button
+                    type="button"
                     onClick={handleSearch}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-blue-500 transition-colors"
+                    className="ui-button-primary h-10 px-4 text-sm"
                 >
-                    🔍
+                    Найти
                 </button>
             </div>
 
-            <AnimatePresence>
-                {showSuggestions && suggestions.length > 0 && (
-                    <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl z-50 max-h-60 overflow-y-auto"
-                    >
-                        {suggestions.map((suggestion, index) => (
-                            <motion.div
-                                key={suggestion.id}
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: index * 0.05 }}
-                                className="p-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-100 dark:border-gray-600 last:border-b-0 transition-colors"
-                                onClick={() => handleSuggestionClick(suggestion)}
-                            >
-                                <div className="font-medium text-gray-900 dark:text-white">
-                                    {suggestion.title}
-                                </div>
-                                <div className="text-sm text-gray-500 dark:text-gray-400 capitalize">
-                                    {suggestion.category.toLowerCase()}
-                                </div>
-                            </motion.div>
-                        ))}
-                    </motion.div>
-                )}
-            </AnimatePresence>
+            {showSuggestions && suggestions.length > 0 && (
+                <div className="ui-card mt-2 max-h-60 overflow-y-auto">
+                    {suggestions.map((suggestion, index) => (
+                        <button
+                            key={suggestion.id}
+                            type="button"
+                            onClick={() => handleSuggestionClick(suggestion)}
+                            className={`w-full text-left px-3 py-2 text-sm ${
+                                index === suggestions.length - 1
+                                    ? ""
+                                    : "border-b border-gray-200"
+                            } hover:bg-gray-50`}
+                        >
+                            <div className="text-gray-900">{suggestion.title}</div>
+                            <div className="text-xs text-gray-500 capitalize">
+                                {suggestion.category.toLowerCase()}
+                            </div>
+                        </button>
+                    ))}
+                </div>
+            )}
         </div>
     );
 }

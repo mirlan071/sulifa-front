@@ -1,4 +1,3 @@
-// lib/stores.ts
 import { create } from "zustand";
 
 interface AuthState {
@@ -9,9 +8,23 @@ interface AuthState {
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
-    token: null,
-    userId: null,
-    login: (token, userId) => set({ token, userId }),
-    logout: () => set({ token: null, userId: null }),
-}));
+    token: typeof window !== "undefined"
+        ? localStorage.getItem("authToken")
+        : null,
 
+    userId: typeof window !== "undefined"
+        ? localStorage.getItem("userId")
+        : null,
+
+    login: (token, userId) => {
+        localStorage.setItem("authToken", token);
+        localStorage.setItem("userId", userId);
+        set({ token, userId });
+    },
+
+    logout: () => {
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("userId");
+        set({ token: null, userId: null });
+    },
+}));
