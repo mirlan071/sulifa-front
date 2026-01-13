@@ -5,14 +5,50 @@ import { useAuthStore } from "@/lib/stores";
 import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 
-export default function Navbar() {
+function AuthLinks() {
     const { token, userId, logout } = useAuthStore();
     const favoritesHref = token ? "/profile" : "/ads/auth/login";
+
+    return (
+        <>
+            {!token && (
+                <Link href="/ads/auth/login" className="hover:text-blue-600">
+                    👤 Войти
+                </Link>
+            )}
+            {token && (
+                <Link href="/profile" className="hover:text-blue-600">
+                    👤 Профиль
+                </Link>
+            )}
+            <Link href={favoritesHref} className="hover:text-blue-600">
+                ♡ Избранное
+            </Link>
+            {token && (
+                <button
+                    type="button"
+                    onClick={logout}
+                    className="border border-gray-200 rounded-md px-3 py-1.5 bg-white text-sm"
+                >
+                    Выйти ({userId})
+                </button>
+            )}
+        </>
+    );
+}
+
+export default function Navbar() {
     const params = useParams<{ locale?: string }>();
     const locale = params?.locale || "en";
     const router = useRouter();
     const searchParams = useSearchParams();
     const [query, setQuery] = useState(searchParams.get("q") ?? "");
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+        useAuthStore.getState().hydrate();
+    }, []);
 
     useEffect(() => {
         setQuery(searchParams.get("q") ?? "");
@@ -56,28 +92,7 @@ export default function Navbar() {
                     </div>
 
                     <div className="flex items-center gap-4 text-sm text-gray-700">
-                        {!token && (
-                            <Link href="/ads/auth/login" className="hover:text-blue-600">
-                                👤 Войти
-                            </Link>
-                        )}
-                        {token && (
-                            <Link href="/profile" className="hover:text-blue-600">
-                                👤 Профиль
-                            </Link>
-                        )}
-                        <Link href={favoritesHref} className="hover:text-blue-600">
-                            ♡ Избранное
-                        </Link>
-                        {token && (
-                            <button
-                                type="button"
-                                onClick={logout}
-                                className="border border-gray-200 rounded-md px-3 py-1.5 bg-white text-sm"
-                            >
-                                Выйти ({userId})
-                            </button>
-                        )}
+                        {mounted ? <AuthLinks /> : null}
                     </div>
                 </div>
             </div>

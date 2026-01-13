@@ -1,4 +1,7 @@
-﻿import { Ad } from "@/types";
+﻿"use client";
+
+import { useEffect, useState } from "react";
+import { Ad } from "@/types";
 import FavoriteButton from "./FavoriteButton";
 
 interface AdCardProps {
@@ -7,6 +10,20 @@ interface AdCardProps {
 
 export default function AdCard({ ad }: AdCardProps) {
     const imageUrl = ad.images?.[0];
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    const priceText = mounted
+        ? new Intl.NumberFormat("ru-RU").format(ad.price)
+        : String(ad.price);
+    const dateText = mounted
+        ? new Date(ad.createdAt).toLocaleDateString("ru-RU")
+        : ad.createdAt.includes("T")
+            ? ad.createdAt.split("T")[0]
+            : ad.createdAt;
 
     return (
         <div className="ui-card p-3 hover:border-blue-300">
@@ -30,13 +47,13 @@ export default function AdCard({ ad }: AdCardProps) {
             </div>
 
             <div className="mt-2 text-base font-bold text-blue-600">
-                ${ad.price.toLocaleString()}
+                ${priceText}
             </div>
             <h3 className="text-sm text-gray-800 line-clamp-2">
                 {ad.title}
             </h3>
             <div className="mt-2 text-xs text-gray-500">
-                {ad.region} · {new Date(ad.createdAt).toLocaleDateString("ru-RU")}
+                {ad.region} · {dateText}
             </div>
         </div>
     );

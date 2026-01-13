@@ -1,4 +1,4 @@
-import axios from "axios";
+﻿import axios from "axios";
 import { Ad, PageResponse } from "@/types";
 
 const API_BASE_URL =
@@ -43,15 +43,22 @@ export const adApi = {
         page?: number;
         size?: number;
     }) => {
+        const sortBy =
+            filters.sortBy === "price_low" || filters.sortBy === "price_high"
+                ? "price"
+                : filters.sortBy === "popular"
+                    ? "views"
+                    : "createdAt";
+        const sort =
+            filters.sortBy === "price_low"
+                ? "asc"
+                : "desc";
+
         const params: Record<string, any> = {
             page: filters.page ?? 0,
             size: filters.size ?? 20,
-            sort:
-                filters.sortBy === "price_low"
-                    ? "asc"
-                    : filters.sortBy === "price_high"
-                        ? "desc"
-                        : "desc",
+            sort,
+            sortBy,
         };
 
         if (filters.query) params.query = filters.query;
@@ -83,7 +90,7 @@ export const adApi = {
         category: string;
         region: string;
     }) => api.post<Ad>("/ads", payload),
-    // ✅ УДАЛЕНИЕ (ВОТ ЧЕГО НЕ ХВАТАЛО)
+    // ✅ УДАЛЕНИЕ 
     deleteAd: (id: number) => api.delete(`/ads/${id}`),
 };
 
